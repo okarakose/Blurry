@@ -51,6 +51,7 @@ public class BlurTask {
     this.factor = factor;
     this.callback = callback;
     this.contextWeakRef = new WeakReference<>(target.getContext());
+    this.targetRef = new WeakReference<>(target);
 
     target.setDrawingCacheEnabled(true);
     target.destroyDrawingCache();
