@@ -7,6 +7,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+
+import org.xwalk.core.XWalkGetBitmapCallback;
+import org.xwalk.core.XWalkView;
+
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +40,7 @@ public class BlurTask {
 
   private Resources res;
   private WeakReference<Context> contextWeakRef;
+  private WeakReference<View> targetRef;
   private BlurFactor factor;
   private Bitmap bitmap;
   private Callback callback;
@@ -65,6 +70,32 @@ public class BlurTask {
   public void execute() {
     THREAD_POOL.execute(new Runnable() {
       @Override public void run() {
+
+        Bitmap emptyBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+        if (emptyBitmap.sameAs(bitmap)) {
+          if (targetRef.get() instanceof XWalkView) {
+
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+              @Override
+              public void run() {
+                ((XWalkView) targetRef.get()).captureBitmapAsync(new XWalkGetBitmapCallback() {
+                  @Override
+                  public void onFinishGetBitmap(Bitmap bitmap, int i) {
+                    Context context = contextWeakRef.get();
+                    final BitmapDrawable bitmapDrawable =
+                            new BitmapDrawable(res, Blur.of(context, bitmap, factor));
+
+                    if (callback != null) {
+                      callback.done(bitmapDrawable);
+                    }
+                  }
+                });
+              }
+            });
+            return;
+          }
+        }
+
         Context context = contextWeakRef.get();
         final BitmapDrawable bitmapDrawable =
             new BitmapDrawable(res, Blur.of(context, bitmap, factor));
