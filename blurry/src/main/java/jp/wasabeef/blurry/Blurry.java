@@ -58,6 +58,7 @@ public class Blurry {
       this.context = context;
       blurredView = new View(context);
       blurredView.setTag(TAG);
+      blurredView.setClickable(true);
       factor = new BlurFactor();
     }
 
